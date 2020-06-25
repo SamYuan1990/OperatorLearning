@@ -1,0 +1,11 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: learning
+subjects:
+- kind: ServiceAccount
+  name: learning
+roleRef:
+  kind: Role
+  name: learning
+  apiGroup: rbac.authorization.k8s.io
