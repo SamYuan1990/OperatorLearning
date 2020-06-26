@@ -9,8 +9,12 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-- task: Go@0
-  inputs:
-    command: 'test'
-    arguments: '-v ./...'
-    workingDirectory: 'learning'
+jobs: 
+  - job: 
+    displayName: build
+    steps:
+    - task: Go@0
+      inputs:
+        command: 'test'
+        arguments: '-v ./...'
+        workingDirectory: 'learning'
