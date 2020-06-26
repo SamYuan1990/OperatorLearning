@@ -9,7 +9,9 @@ import (
 
 // MykindSpec defines the desired state of Mykind
 type MykindSpec struct {
-	Size int32 `json:"size"`
+	Size      int32  `json:"size"`
+	Image     string `json:"Image"`
+	EnvsValue string `json:"Envs"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
@@ -29,7 +31,8 @@ type MykindStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=mykinds,scope=Namespaced
 type Mykind struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   MykindSpec   `json:"spec,omitempty"`
