@@ -101,7 +101,7 @@ func (r *ReconcileMykind) Reconcile(request reconcile.Request) (reconcile.Result
 	}
 
 	// Define a new Pod object
-	pod := newPodForCR(instance)
+	pod := NewPodForCR(instance)
 
 	// Set Mykind instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
@@ -130,10 +130,20 @@ func (r *ReconcileMykind) Reconcile(request reconcile.Request) (reconcile.Result
 }
 
 // newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *mykindv1alpha1.Mykind) *corev1.Pod {
+func NewPodForCR(cr *mykindv1alpha1.Mykind) *corev1.Pod {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
+	image := "busybox"
+	if cr.Spec.Image != "" {
+		image = cr.Spec.Image
+	}
+
+	EnvVar := corev1.EnvVar{
+		Name:  "dummy",
+		Value: cr.Spec.EnvsValue,
+	}
+
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cr.Name + "-pod",
@@ -144,8 +154,9 @@ func newPodForCR(cr *mykindv1alpha1.Mykind) *corev1.Pod {
 			Containers: []corev1.Container{
 				{
 					Name:    "busybox",
-					Image:   "busybox",
+					Image:   image,
 					Command: []string{"sleep", "3600"},
+					Env:     []corev1.EnvVar{EnvVar},
 				},
 			},
 		},

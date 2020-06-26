@@ -31,10 +31,16 @@ spec:
         spec:
           description: MykindSpec defines the desired state of Mykind
           properties:
+            Envs:
+              type: string
+            Image:
+              type: string
             size:
               format: int32
               type: integer
           required:
+          - Envs
+          - Image
           - size
           type: object
         status:
