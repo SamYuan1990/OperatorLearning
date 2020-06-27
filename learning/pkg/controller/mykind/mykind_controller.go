@@ -100,8 +100,13 @@ func (r *ReconcileMykind) Reconcile(request reconcile.Request) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
+	configMap := NewConfigMap(instance)
+	reqLogger.Info(configMap.String())
+	r.client.Create(context.TODO(), configMap)
+	selector := NewConfigMapKeySelector(configMap)
+	envSource := NewEnvVarSource(selector)
 	// Define a new Pod object
-	pod := NewPodForCR(instance)
+	pod := NewPodForCR(instance, envSource)
 
 	// Set Mykind instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
@@ -129,8 +134,40 @@ func (r *ReconcileMykind) Reconcile(request reconcile.Request) (reconcile.Result
 	return reconcile.Result{}, nil
 }
 
+// newConfigMap
+func NewConfigMap(cr *mykindv1alpha1.Mykind) *corev1.ConfigMap {
+	labels := map[string]string{
+		"app": cr.Name,
+	}
+	m1 := make(map[string]string)
+	m1["a"] = cr.Spec.EnvsValue
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cr.Name + "-configmap",
+			Namespace: cr.Namespace,
+			Labels:    labels,
+		},
+		Data: m1,
+	}
+}
+
+func NewConfigMapKeySelector(configmap *corev1.ConfigMap) *corev1.ConfigMapKeySelector {
+	return &corev1.ConfigMapKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
+			Name: configmap.ObjectMeta.Name,
+		},
+		Key: "a",
+	}
+}
+
+func NewEnvVarSource(configMapSelector *corev1.ConfigMapKeySelector) *corev1.EnvVarSource {
+	return &corev1.EnvVarSource{
+		ConfigMapKeyRef: configMapSelector,
+	}
+}
+
 // newPodForCR returns a busybox pod with the same name/namespace as the cr
-func NewPodForCR(cr *mykindv1alpha1.Mykind) *corev1.Pod {
+func NewPodForCR(cr *mykindv1alpha1.Mykind, envVarSource *corev1.EnvVarSource) *corev1.Pod {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
@@ -140,8 +177,8 @@ func NewPodForCR(cr *mykindv1alpha1.Mykind) *corev1.Pod {
 	}
 
 	EnvVar := corev1.EnvVar{
-		Name:  "dummy",
-		Value: cr.Spec.EnvsValue,
+		Name:      "dummy",
+		ValueFrom: envVarSource,
 	}
 
 	return &corev1.Pod{
