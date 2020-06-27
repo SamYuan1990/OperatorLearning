@@ -105,6 +105,8 @@ func (r *ReconcileMykind) Reconcile(request reconcile.Request) (reconcile.Result
 	r.client.Create(context.TODO(), configMap)
 	selector := NewConfigMapKeySelector(configMap)
 	envSource := NewEnvVarSource(selector)
+	service := NewService(instance)
+	r.client.Create(context.TODO(), service)
 	// Define a new Pod object
 	pod := NewPodForCR(instance, envSource)
 
@@ -132,6 +134,29 @@ func (r *ReconcileMykind) Reconcile(request reconcile.Request) (reconcile.Result
 	// Pod already exists - don't requeue
 	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 	return reconcile.Result{}, nil
+}
+
+func NewService(cr *mykindv1alpha1.Mykind) *corev1.Service {
+	labels := map[string]string{
+		"app": cr.Name,
+	}
+	m1 := make(map[string]string)
+	m1["app"] = cr.Name
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cr.Name + "-service",
+			Namespace: cr.Namespace,
+			Labels:    labels,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Port: 80,
+				},
+			},
+			Selector: m1,
+		},
+	}
 }
 
 // newConfigMap
