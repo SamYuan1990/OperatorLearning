@@ -72,7 +72,7 @@ var _ = Describe("MykindController", func() {
 			instance := &mykindv1alpha1.Mykind{Spec: cr}
 			service := mykind.NewService(instance)
 			Expect(service).NotTo(BeNil())
-			Expect(80).To(Equal(service.Ports[0].Port))
+			Expect(int32(80)).To(Equal(service.Spec.Ports[0].Port))
 		})
 	})
 })
