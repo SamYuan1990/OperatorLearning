@@ -65,4 +65,14 @@ var _ = Describe("MykindController", func() {
 			Expect(envSource).To(Equal(Pod.Spec.Containers[0].Env[0].ValueFrom))
 		})
 	})
+
+	Context("NewService", func() {
+		It("should not null", func() {
+			cr := mykindv1alpha1.MykindSpec{EnvsValue: "value"}
+			instance := &mykindv1alpha1.Mykind{Spec: cr}
+			service := mykind.NewService(instance)
+			Expect(service).NotTo(BeNil())
+			Expect(int32(80)).To(Equal(service.Spec.Ports[0].Port))
+		})
+	})
 })
